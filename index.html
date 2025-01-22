@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>สร้างโฟลเดอร์ใน Google Drive</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+  </head>
+  <body>
+    <button id="authorize_button" style="display: none" onclick="handleAuthClick()">Authorize</button>
+    <button id="create_folder_button" style="display: none" onclick="createFolder()">Create Folder</button>
+    
+    <script>
+      var CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; // ใส่ Client ID ที่คุณได้จาก Google Cloud Console
+      var API_KEY = 'YOUR_API_KEY'; // ใส่ API Key ที่คุณได้จาก Google Cloud Console
+      var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+      var SCOPES = "https://www.googleapis.com/auth/drive.file";
+      var folderId = '1KDpePFBzaVMwg23h823R2ZQ1HmKxg1BL'; // โฟลเดอร์ที่คุณให้มา
+
+      var gapiInited = false;
+      var gisInited = false;
+
+      function gapiLoaded() {
+        gapi.load("client:auth2", initAuth);
+      }
+
+      function initAuth() {
+        gapi.auth2.init({
+          client_id: CLIENT_ID
+        }).then(function () {
+          gapiInited = true;
+          maybeEnableButtons();
+        });
+      }
+
+      function gisLoaded() {
+        gapi.client.load("drive", "v3", function () {
+          gisInited = true;
+          maybeEnableButtons();
+        });
+      }
+
+      function maybeEnableButtons() {
+        if (gapiInited && gisInited) {
+          document.getElementById("authorize_button").style.display = "none";
+          document.getElementById("create_folder_button").style.display = "inline";
+        }
+      }
+
+      function handleAuthClick() {
+        gapi.auth2.getAuthInstance().signIn();
+      }
+
+      function createFolder() {
+        var folderMetadata = {
+          'name': 'New Folder', // ชื่อโฟลเดอร์ที่ต้องการสร้าง
+          'mimeType': 'application/vnd.google-apps.folder',
+          'parents': [folderId] // ใส่ Folder ID ที่คุณต้องการจะสร้างโฟลเดอร์ในนั้น
+        };
+
+        var request = gapi.client.drive.files.create({
+          resource: folderMetadata,
+          fields: 'id'
+        });
+
+        request.execute(function (file) {
+          if (file.id) {
+            alert('สร้างโฟลเดอร์สำเร็จ! ID: ' + file.id);
+          } else {
+            alert('เกิดข้อผิดพลาดในการสร้างโฟลเดอร์');
+          }
+        });
+      }
+
+      function start() {
+        gapi.load('client:auth2', gapiLoaded);
+        gapi.load('client', gisLoaded);
+      }
+
+      start();
+    </script>
+  </body>
+</html>
